@@ -1,6 +1,16 @@
 # etcd-admin
 
-一个现代化的etcd管理平台，提供直观的Web界面用于管理和监控etcd集群。
+🚀 現代化的 etcd 管理平台，提供直觀的 Web 界面用於管理和監控 etcd 集群。
+
+## ✨ 項目特色
+
+- 🖥️ **現代化前端**: Vue 3 + TypeScript + TailwindCSS
+- 🚀 **高性能後端**: Go + Gin + GORM
+- 💾 **零配置數據庫**: 默認使用 SQLite，開箱即用
+- 🔐 **安全認證**: JWT 身份驗證系統
+- 🌳 **可視化界面**: JSON 樹狀視圖，支持節點選擇和複製
+- 📦 **容器化支持**: Docker 一鍵部署
+- 🔧 **靈活配置**: 支持 SQLite/MySQL 數據庫切換
 
 ## 🚀 技术栈
 
@@ -11,11 +21,13 @@
 - **TypeScript** - 类型安全的JavaScript开发
 
 ### 后端
-- **Go** - 静态类型编程语言
-- **Gin** - 高性能HTTP Web框架
-- **MySQL** - 关系型数据库，用于持久化数据
-- **Redis** - 内存数据结构存储，用于缓存
-- **etcd** - 分布式键值存储（目标管理系统）
+- **Go 1.23** - 静态类型编程语言
+- **Gin 1.10** - 高性能HTTP Web框架
+- **GORM 1.30** - 对象关系映射库
+- **SQLite/MySQL** - 关系型数据库（默认使用SQLite进行开发）
+- **JWT 4.5** - JSON Web Token用于身份验证
+- **etcd Client v3.6** - 官方etcd客户端库
+- **Redis** - 内存数据结构存储（可选，用于缓存）
 
 ## 📁 项目结构
 
@@ -38,11 +50,12 @@ etcd-admin/
 ## 🛠️ 开发环境设置
 
 ### 前置要求
+
 - Node.js 20+
-- Go 1.21+
-- MySQL 8.0+
-- Redis 7+
-- Docker & Docker Compose
+- Go 1.23+
+- SQLite (自動創建，無需額外安裝)
+- etcd 集群 (用於測試和管理)
+- Docker & Docker Compose (可選，用於容器化部署)
 
 ### 快速开始
 
@@ -84,14 +97,38 @@ docker-compose -f docker/docker-compose.yml up -d
 docker-compose -f docker/docker-compose.yml down
 ```
 
-### 服务端口
-- 前端：http://localhost:3000
-- 后端：http://localhost:8080
-- MySQL：localhost:3306
-- Redis：localhost:6379
-- etcd：http://localhost:2379
+### 服務端口
 
-## 📝 开发指南
+- 前端：<http://localhost:3000>
+- 後端：<http://localhost:8080>
+- etcd：<http://localhost:2379>
+- MySQL：localhost:3306 (如果使用 MySQL)
+- Redis：localhost:6379 (如果啟用 Redis)
+
+> **注意**: 默認配置使用 SQLite，數據庫文件將自動創建在 `backend/data/etcd-admin.db`
+
+## � 數據庫配置
+
+本項目支持兩種數據庫配置：
+
+### SQLite (默認推薦)
+
+- ✅ **零配置**: 無需額外安裝或設置
+- ✅ **輕量級**: 適合開發和小型部署
+- ✅ **便攜性**: 數據庫文件可輕松遷移
+- ✅ **快速啟動**: 專案啟動時自動創建數據庫
+
+數據庫文件位置：`backend/data/etcd-admin.db`
+
+### MySQL (生產環境可選)
+
+- ✅ **高性能**: 適合大型部署和高並發
+- ✅ **可擴展**: 支持集群和複製
+- ✅ **豐富功能**: 完整的 SQL 支持
+
+切換到 MySQL：更新 `.env` 文件中的 `DB_TYPE=mysql` 並提供 MySQL 連接信息。
+
+## �📝 開發指南
 
 ### 前端开发
 - 使用Vue 3 Composition API和`<script setup>`语法
@@ -113,23 +150,44 @@ docker-compose -f docker/docker-compose.yml down
 - 使用JWT令牌进行认证
 - 实现适当的错误响应
 
-## 🔧 环境变量
+## 🔧 環境變量
 
-### 后端配置
+### 後端配置 (SQLite 默認)
+
 ```bash
+# 服務器配置
+SERVER_PORT=8080
+GIN_MODE=debug
+
+# 數據庫配置 (默認使用 SQLite)
+DB_TYPE=sqlite
+DB_PATH=data/etcd-admin.db
+
+# JWT配置
+JWT_SECRET=your-very-secret-jwt-key-change-this-in-production
+JWT_EXPIRES_IN=24h
+
+# Redis配置 (可選，用於緩存)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# CORS配置
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+### MySQL 配置 (可選)
+
+如果您希望使用 MySQL 而非 SQLite，請更新環境變量：
+
+```bash
+# 數據庫配置 (MySQL)
+DB_TYPE=mysql
 DB_HOST=localhost
 DB_PORT=3306
 DB_USERNAME=root
 DB_PASSWORD=password
 DB_DATABASE=etcd_admin
-
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-
-SERVER_PORT=8080
-JWT_SECRET=your-secret-key
-GIN_MODE=debug
 ```
 
 ## 📚 API文档
