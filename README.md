@@ -89,23 +89,45 @@ etcd-admin/
 
 ## 🐳 Docker部署
 
+Docker 環境提供完整的生產級部署，包含所有依賴服務：
+
 ```bash
 # 构建并启动所有服务
 docker-compose -f docker/docker-compose.yml up -d
 
 # 停止服务
 docker-compose -f docker/docker-compose.yml down
+
+# 查看服务状态
+docker-compose -f docker/docker-compose.yml ps
+
+# 查看日志
+docker-compose -f docker/docker-compose.yml logs -f [service_name]
 ```
 
-### 服務端口
+### Docker 服務配置
 
-- 前端：<http://localhost:3000>
-- 後端：<http://localhost:8080>
-- etcd：<http://localhost:2379>
-- MySQL：localhost:3306 (如果使用 MySQL)
-- Redis：localhost:6379 (如果啟用 Redis)
+| 服務 | 端口 | 說明 |
+|------|------|------|
+| 前端 (Nginx) | <http://localhost:3000> | Vue.js 應用，Nginx 提供服務 |
+| 後端 (Go) | <http://localhost:8080> | Gin API 服務器 |
+| MySQL | localhost:3306 | 生產數據庫 |
+| Redis | localhost:6379 | 緩存和會話存儲 |
+| etcd | <http://localhost:2379> | 測試用 etcd 集群 |
 
-> **注意**: 默認配置使用 SQLite，數據庫文件將自動創建在 `backend/data/etcd-admin.db`
+### 部署環境差異
+
+| 配置項 | 本地開發 | Docker 部署 |
+|--------|----------|-------------|
+| **數據庫** | SQLite (零配置) | MySQL 8.0 |
+| **緩存** | 可選 Redis | Redis 7 |
+| **前端服務** | Vite 開發服務器 | Nginx 生產服務器 |
+| **etcd** | 外部連接 | 內建測試集群 |
+
+> **重要說明**:
+>
+> - 🔧 **本地開發**: 使用 SQLite，快速啟動，無需額外依賴
+> - 🚀 **Docker 部署**: 使用 MySQL + Redis，完整生產環境模擬
 
 ## � 數據庫配置
 
@@ -127,6 +149,31 @@ docker-compose -f docker/docker-compose.yml down
 - ✅ **豐富功能**: 完整的 SQL 支持
 
 切換到 MySQL：更新 `.env` 文件中的 `DB_TYPE=mysql` 並提供 MySQL 連接信息。
+
+## 📝 開發指南
+
+### 前端开发
+
+- 使用Vue 3 Composition API和`<script setup>`语法
+- 优先使用`ref()`和`reactive()`进行响应式状态管理
+- 使用TailwindCSS类进行样式设计，避免自定义CSS
+- 遵循TypeScript最佳实践，提供适当的类型定义
+
+### 后端开发
+
+- 遵循Go约定和标准项目布局
+- 使用Gin中间件处理CORS、认证、日志
+- 实现适当的错误处理和HTTP状态码
+- 使用结构体标签进行JSON序列化
+- 遵循RESTful API设计原则
+
+### API设计
+
+- 使用RESTful端点和适当的HTTP方法
+- 实现一致的响应格式（status、data、message字段）
+- 添加输入验证和清理
+- 使用JWT令牌进行认证
+- 实现适当的错误响应
 
 ## �📝 開發指南
 
@@ -152,7 +199,7 @@ docker-compose -f docker/docker-compose.yml down
 
 ## 🔧 環境變量
 
-### 後端配置 (SQLite 默認)
+### 本地開發配置 (SQLite 默認)
 
 ```bash
 # 服務器配置
@@ -174,14 +221,45 @@ REDIS_PASSWORD=
 
 # CORS配置
 CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# 默認管理員賬戶（首次運行時創建）
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
 ```
 
-### MySQL 配置 (可選)
+### Docker 生產配置 (MySQL + Redis)
 
-如果您希望使用 MySQL 而非 SQLite，請更新環境變量：
+Docker 環境自動使用以下配置：
 
 ```bash
-# 數據庫配置 (MySQL)
+# 服務器配置
+SERVER_PORT=8080
+GIN_MODE=release
+
+# 數據庫配置 (Docker 環境使用 MySQL)
+DB_TYPE=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=rootpassword
+DB_DATABASE=etcd_admin
+
+# Redis配置 (Docker 環境內建 Redis)
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# JWT配置
+JWT_SECRET=your-production-jwt-secret-key
+JWT_EXPIRES_IN=24h
+```
+
+### MySQL 手動配置 (可選)
+
+如果您希望在本地開發中使用 MySQL 而非 SQLite：
+
+```bash
+# 數據庫配置 (本地 MySQL)
 DB_TYPE=mysql
 DB_HOST=localhost
 DB_PORT=3306
