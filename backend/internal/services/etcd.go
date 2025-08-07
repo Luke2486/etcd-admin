@@ -41,6 +41,10 @@ func (s *EtcdService) GetClient(conn *models.Connection) (*clientv3.Client, erro
 		}
 	}
 
+	// 處理localhost地址，在Docker容器中使用extra_hosts配置
+	// Docker的extra_hosts已經將localhost映射到正確的主機地址
+	// 無需手動替換，保持原始的localhost地址
+
 	// 创建etcd客户端配置
 	config := clientv3.Config{
 		Endpoints:   endpoints,

@@ -12,6 +12,10 @@ const routes = [
     redirect: '/dashboard'
   },
   {
+    path: '/home',
+    redirect: '/dashboard'
+  },
+  {
     path: '/login',
     name: 'Login',
     component: Login,

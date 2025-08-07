@@ -17,34 +17,22 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.backend
     ports:
-      - "8080:8080"
+      - "8095:8095"
     environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USERNAME=root
-      - DB_PASSWORD=rootpassword
-      - DB_DATABASE=etcd_admin
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - SERVER_PORT=8095
+      - DB_TYPE=sqlite
+      - DB_PATH=/app/data/etcd-admin.db
+      - JWT_SECRET=your-very-secret-jwt-key-change-this-in-production
+      - JWT_EXPIRES_IN=24h
       - GIN_MODE=release
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - etcd-admin-network
-
-  # MySQL 数据库
-  mysql:
-    image: mysql:8.0
-    environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=etcd_admin
-      - MYSQL_USER=etcd_user
-      - MYSQL_PASSWORD=etcd_password
-    ports:
-      - "3306:3306"
+      - CORS_ORIGINS=http://localhost:3000
     volumes:
-      - mysql_data:/var/lib/mysql
+      - backend_data:/app/data
+    extra_hosts:
+      - "localhost:0.250.250.254"
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
     networks:
       - etcd-admin-network
 
@@ -52,7 +40,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6382:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -73,15 +61,15 @@ services:
       - --initial-cluster-token=etcd-cluster-1
       - --initial-cluster-state=new
     ports:
-      - "2379:2379"
-      - "2380:2380"
+      - "2378:2379"
+      - "2381:2380"
     volumes:
       - etcd_data:/etcd-data
     networks:
       - etcd-admin-network
 
 volumes:
-  mysql_data:
+  backend_data:
   redis_data:
   etcd_data:
 
