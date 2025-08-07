@@ -1,0 +1,90 @@
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - etcd-admin-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - DB_DATABASE=etcd_admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - GIN_MODE=release
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - etcd-admin-network
+
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=etcd_admin
+      - MYSQL_USER=etcd_user
+      - MYSQL_PASSWORD=etcd_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - etcd-admin-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - etcd-admin-network
+
+  # etcd 服务 (被管理的目标系统)
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    command:
+      - /usr/local/bin/etcd
+      - --name=etcd-server
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd:2379
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-advertise-peer-urls=http://etcd:2380
+      - --initial-cluster=etcd-server=http://etcd:2380
+      - --initial-cluster-token=etcd-cluster-1
+      - --initial-cluster-state=new
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd_data:/etcd-data
+    networks:
+      - etcd-admin-network
+
+volumes:
+  mysql_data:
+  redis_data:
+  etcd_data:
+
+networks:
+  etcd-admin-network:
+    driver: bridge
